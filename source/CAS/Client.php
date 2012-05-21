@@ -650,6 +650,17 @@ class CAS_Client
         $this->_signoutCallbackArgs = $additionalArgs;
     }
 
+
+    private $_sessionHandler;
+
+    public function setSessionHandler($obj)
+    {
+        if (!($obj instanceof CAS_Session_SessionHandler)) {
+            throw new CAS_InvalidArgumentException('$className must implement the CAS_Session_SessionHandler');
+        }
+        $this->_sessionHandler = $obj;
+    }
+
     // ########################################################################
     //  Methods for supplying code-flow feedback to integrators.
     // ########################################################################
@@ -783,12 +794,13 @@ class CAS_Client
 
         phpCAS::traceBegin();
 
+        $this->_sessionHandler = new CAS_Session_DefaultSessionHandler();
         $this->_setChangeSessionID($changeSessionID); // true : allow to change the session_id(), false session_id won't be change and logout won't be handle because of that
 
         // skip Session Handling for logout requests and if don't want it'
-        if (session_id()=="" && !$this->_isLogoutRequest()) {
-            phpCAS :: trace("Starting a new session");
-            session_start();
+        if (!$this->_isLogoutRequest()) {
+            phpCAS :: trace("Opening session");
+            $this->_sessionHandler->open();
         }
 
         // are we in proxy mode ?
@@ -1430,8 +1442,11 @@ class CAS_Client
         header('Location: '.$cas_url);
         phpCAS::trace("Prepare redirect to : ".$cas_url);
 
-        session_unset();
-        session_destroy();
+        // Ensure the session is open so it is actually destroyed
+        // TODO: when _change_session_id is false, should this use a callback instead? Similar to single sign out.
+        $this->_sessionHandler->open();
+        $this->_sessionHandler->destroy();
+
         $lang = $this->getLangObj();
         $this->printHTMLHeader($lang->getLogout());
         printf('<p>'.$lang->getShouldHaveBeenRedirected(). '</p>', $cas_url);
@@ -1517,23 +1532,15 @@ class CAS_Client
 
             // If phpCAS is managing the session_id, destroy session thanks to session_id.
             if ($this->getChangeSessionID()) {
-                $session_id = preg_replace('/[^a-zA-Z0-9\-]/', '', $ticket2logout);
+                // fix session ID
+                $this->_sessionHandler->start($ticket2logout);
+
+                $session_id = $this->_sessionHandler->id();
                 phpCAS::trace("Session id: ".$session_id);
 
-                // destroy a possible application session created before phpcas
-                if (session_id() !== "") {
-                    session_unset();
-                    session_destroy();
-                }
-                // fix session ID
-                session_id($session_id);
-                $_COOKIE[session_name()]=$session_id;
-                $_GET[session_name()]=$session_id;
-
                 // Overwrite session
-                session_start();
-                session_unset();
-                session_destroy();
+                $this->_sessionHandler->destroy();
+
                 phpCAS::trace("Session ". $session_id . " destroyed");
             }
         } else {
@@ -3156,15 +3163,7 @@ class CAS_Client
         phpCAS::traceBegin();
         if ($this->getChangeSessionID()) {
             if (!empty($this->_user)) {
-                $old_session = $_SESSION;
-                session_destroy();
-                // set up a new session, of name based on the ticket
-                $session_id = preg_replace('/[^a-zA-Z0-9\-]/', '', $ticket);
-                phpCAS :: trace("Session ID: ".$session_id);
-                session_id($session_id);
-                session_start();
-                phpCAS :: trace("Restoring old session vars");
-                $_SESSION = $old_session;
+                $this->_sessionHandler->rename($ticket);
             } else {
                 phpCAS :: error('Session should only be renamed after successfull authentication');
             }

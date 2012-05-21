@@ -1057,6 +1057,15 @@ class phpCAS
         self::$_PHPCAS_CLIENT->setSingleSignoutCallback($function, $additionalArgs);
     }
 
+    public static function setSessionHandler($sessionHandler)
+    {
+        if (!is_object(self::$_PHPCAS_CLIENT)) {
+            phpCAS :: error('this method should not be called before ' . __CLASS__ . '::client() or ' . __CLASS__ . '::proxy()');
+        }
+
+        self::$_PHPCAS_CLIENT->setSessionHandler($sessionHandler);
+    }
+
     /**
      * This method is called to check if the user is already authenticated
      * locally or has a global cas session. A already existing cas session is

@@ -1445,6 +1445,7 @@ class CAS_Client
         // Ensure the session is open so it is actually destroyed
         // TODO: when _change_session_id is false, should this use a callback instead? Similar to single sign out.
         $this->_sessionHandler->open();
+        unset($_SESSION['phpCAS']);
         $this->_sessionHandler->destroy();
 
         $lang = $this->getLangObj();
@@ -1539,6 +1540,7 @@ class CAS_Client
                 phpCAS::trace("Session id: ".$session_id);
 
                 // Overwrite session
+                unset($_SESSION['phpCAS']);
                 $this->_sessionHandler->destroy();
 
                 phpCAS::trace("Session ". $session_id . " destroyed");

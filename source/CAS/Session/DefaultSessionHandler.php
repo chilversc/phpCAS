@@ -70,7 +70,7 @@ class CAS_Session_DefaultSessionHandler implements CAS_Session_SessionHandler
 
     function destroy()
     {
-        if ($this->hasSession()) {
+        if (session_id() !== '') {
             session_unset();
             session_destroy();
             $_SESSION = array();

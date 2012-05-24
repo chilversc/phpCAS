@@ -31,7 +31,7 @@ interface CAS_Session_SessionHandler
 {
     function id();
     function open();
-    function start($ticket = null);
+    function openSpecificSession($ticket);
     function rename($ticket);
     function destroy();
 }

@@ -40,16 +40,14 @@ class CAS_Session_DefaultSessionHandler implements CAS_Session_SessionHandler
             session_start();
     }
 
-    function start($ticket = null)
+    function openSpecificSession($ticket)
     {
         $this->destroy();
 
-        if ($ticket != null) {
-            $ticket = $this->_sanatizeId($ticket);
-            session_id($ticket);
-            $_COOKIE[session_name()] = $ticket;
-            $_GET[session_name()] = $ticket;
-        }
+        $ticket = $this->_sanatizeId($ticket);
+        session_id($ticket);
+        $_COOKIE[session_name()] = $ticket;
+        $_GET[session_name()] = $ticket;
 
         session_start();
     }
@@ -59,7 +57,7 @@ class CAS_Session_DefaultSessionHandler implements CAS_Session_SessionHandler
         $old_session = $_SESSION;
         $this->destroy();
         // set up a new session, of name based on the ticket
-        $this->start($ticket);
+        $this->openSpecificSession($ticket);
         $session_id = $this->id();
         phpCAS :: trace("Session ID: ".$session_id);
         phpCAS :: trace("Restoring old session vars");

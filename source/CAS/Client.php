@@ -1534,7 +1534,7 @@ class CAS_Client
             // If phpCAS is managing the session_id, destroy session thanks to session_id.
             if ($this->getChangeSessionID()) {
                 // fix session ID
-                $this->_sessionHandler->start($ticket2logout);
+                $this->_sessionHandler->openSpecificSession($ticket2logout);
 
                 $session_id = $this->_sessionHandler->id();
                 phpCAS::trace("Session id: ".$session_id);

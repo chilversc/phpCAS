@@ -44,7 +44,7 @@ class CAS_Session_DefaultSessionHandler implements CAS_Session_SessionHandler
     {
         $this->destroy();
 
-        $ticket = $this->_sanatizeId($ticket);
+        $ticket = $this->sanatizeId($ticket);
         session_id($ticket);
         $_COOKIE[session_name()] = $ticket;
         $_GET[session_name()] = $ticket;
@@ -75,7 +75,7 @@ class CAS_Session_DefaultSessionHandler implements CAS_Session_SessionHandler
         }
    }
 
-    private function _sanatizeId($id)
+    protected function sanatizeId($id)
     {
         return preg_replace('/[^a-zA-Z0-9\-]/', '', $id);
     }
